@@ -1,0 +1,18 @@
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: build-app-run-
+spec:
+  pipelineRef:
+    name: build-app
+  workspaces:
+  - name: source
+    persistentVolumeClaim:
+        claimName: source
+  params:
+  - name: repo-url
+    value: https://github.com/pnminh/openshift-pipeline-helm.git
+  - name: repo-revision
+    value: tekton
+  

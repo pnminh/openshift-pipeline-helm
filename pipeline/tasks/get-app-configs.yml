@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: yaml-to-result-object
+spec:
+  params:
+    - name: yaml-file-path
+      description: the path to yaml file
+  results:
+    - name: yaml-obj
+      description: "The content from a yaml file as object"
+  steps:
+    - name: yaml-to-result-object
+      image: quay.io/pnminh232/ubi8-extra:1.0.0
+      script: |
+        cat $(params.yaml-file-path) | yq -ojson -I0|jq @json < $(results.yaml-obj.path)
+  workspaces:
+    - name: input
+      description: "Workspace containing the .app-config.yml file"

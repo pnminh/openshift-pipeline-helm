@@ -1,18 +1,65 @@
-Building and Deploying a ReactJS ToDo App with Tekton and Helm Charts on OpenShift
+Application lifecycle with Tekton and Helm Charts on OpenShift
 ----------------------------------------------------------------------------------
 
-In this blog post, we'll walk through the process of setting up a CI/CD pipeline for a ReactJS ToDo application using Tekton and Helm Charts on an OpenShift cluster. The pipeline will include building the Docker image, running unit tests, performing static code analysis, and deploying the app across development (dev), staging (stage), and production (prod) environments using blue-green deployment strategies. We'll use Quay.io as our Docker image registry.
+In this blog post, we will go through the full application lifecycle using Tekton and Helm charts. The journey starts with setting up the Tekton and then step-by-step configuration of Tekton to build and deploy an app to dev environment and then promote it to production one. To make it simple, we ues an example of a ToDo app and a single Openshift cluster for the whole process.
 
-### Prerequisites
+### Installation
+Tekton is a powerful and flexible open-source framework for creating CI/CD systems, allowing developers to build, test, and deploy across cloud providers and on-premise systems. It’s designed to be container-native and is built on Kubernetes, making it a great choice for teams using any K8s distributions such as Openshift.
+On Openshift, the easiest way to have Tekton installed is to install Openshift Pipelines Operator
+```sh
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-pipelines-operator-rh
+  namespace: openshift-operators
+spec:
+  channel: pipelines-1.14
+  installPlanApproval: Automatic
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+```
+The Operator does not only install Tekton resources but also provide us with an UI to configure the pipeline. We will focus on the command line for all of the remaining tasks instead.
 
-1.  An OpenShift cluster with Tekton and Helm installed.
-2.  Quay.io account for Docker image registry.
-3.  A ReactJS ToDo application source code repository.
-4.  Cypress for integration testing.
-5.  Access to static code analysis tools (e.g., ESLint for JavaScript).
+### Build pipeline
+For the build pipeline, we will take advantage of Openshift's BuildConfig with s2i image to create a deployable image at the end.
+To achieve that we will utilize Helm chart which allows us to generate Openshift resources with customizable values.
+```sh
+cd helm && helm create build-app
+```
+The chart only needs to create a BuildConfig resource and then we can use tekton to run the build to bundle the application into an image. Create a template for the BuildConfig like so:
+```yaml
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "build-app.labels" . | nindent 4 }}
+spec:
+  output:
+    pushSecret:
+      name: "{{ .Values.target.image.pushSecret }}"
+    to:
+      kind: DockerImage
+      name: "{{ .Values.target.image.registry }}/{{ .Values.target.image.path }}:{{ .Values.target.image.tag | default "latest" }}"
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Binary
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        name: "{{ .Values.source.image.repository }}:{{ .Values.source.image.tag | default .Chart.AppVersion }}"
+  source:
+    binary: {}
+  runPolicy: Serial
 
-### Step-by-Step Guide
-
+```
+On the tekton side, we will utilize 
+### Deployment pipeline
 #### 1\. Setting Up Tekton Pipelines
 
 First, we need to set up Tekton Pipelines for our CI/CD workflow.

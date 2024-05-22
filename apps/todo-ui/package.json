@@ -1,0 +1,58 @@
+{
+	"name": "todo_react_app",
+	"version": "0.1.0",
+	"private": true,
+	"homepage": "https://mpham.com",
+	"dependencies": {
+		"@mantine/core": "^4.2.12",
+		"@mantine/hooks": "^4.2.12",
+		"@testing-library/jest-dom": "^5.16.4",
+		"@testing-library/react": "^13.3.0",
+		"@testing-library/user-event": "^13.5.0",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"react-scripts": "5.0.1",
+		"tabler-icons-react": "^1.52.0",
+		"web-vitals": "^2.1.4"
+	},
+	"scripts": {
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d build",
+		"start": "react-scripts start",
+		"build": "react-scripts build",
+		"test": "react-scripts test",
+		"eject": "react-scripts eject",
+		"cy:run": "cypress run",
+		"cy:test": "start-server-and-test start http://localhost:3000 cy:run",
+		"cy:e2e": "cy:run"
+	},
+	"eslintConfig": {
+		"extends": [
+			"react-app",
+			"react-app/jest"
+		]
+	},
+	"browserslist": {
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
+		"development": [
+			"last 1 chrome version",
+			"last 1 firefox version",
+			"last 1 safari version"
+		]
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.2.0",
+		"cypress": "^13.9.0",
+		"eslint": "^8.57.0",
+		"eslint-config-react-app": "^7.0.1",
+		"eslint-plugin-react": "^7.34.1",
+		"gh-pages": "^4.0.0",
+		"globals": "^15.1.0",
+		"jest": "^27.5.1",
+		"start-server-and-test": "^2.0.3"
+	}
+}

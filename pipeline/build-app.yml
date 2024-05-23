@@ -6,23 +6,22 @@ metadata:
   namespace: apps
 spec:
   params:
-    - name: app
-      default: todo-ui
-      description: 'Application name'
+    - default: todo-ui
+      description: Application name
+      name: app
       type: string
-    - name: repo-url
-      description: 'Repo url'
+    - description: Repo url
+      name: repo-url
       type: string
-    - name: repo-revision
-      description: 'Repo revision'
-      default: master
+    - default: master
+      description: Repo revision
+      name: repo-revision
       type: string
   tasks:
     - name: git-clone-source
       params:
         - name: url
-          value: >-
-            $(params.repo-url)
+          value: $(params.repo-url)
         - name: revision
           value: $(params.repo-revision)
       taskRef:
@@ -30,6 +29,40 @@ spec:
         name: git-clone
       workspaces:
         - name: output
+          workspace: source
+    - name: retrieve-app-configs
+      params:
+        - name: yaml-file-path
+          value: apps/todo-ui/app.config.yaml
+      runAfter:
+        - git-clone-source
+      taskRef:
+        kind: Task
+        name: yaml-to-result-object
+      workspaces:
+        - name: source
+          workspace: source
+    - name: npm-build
+      params:
+        - name: PATH_CONTEXT
+          value: .
+        - name: ARGS
+          value:
+            - version
+        - name: IMAGE
+          value: 'docker.io/library/node:12-alpine@sha256:dfbebf17bfb014e1e7068e76325a117bccf8679c68aec6a28514184a209c8bae'
+      runAfter:
+        - retrieve-app-configs
+      taskRef:
+        kind: Task
+        name: npm
+      when:
+        - input: $(tasks.retrieve-app-configs.results.yaml-obj.build.type)
+          operator: notin
+          values:
+            - npm
+      workspaces:
+        - name: source
           workspace: source
   workspaces:
     - name: source

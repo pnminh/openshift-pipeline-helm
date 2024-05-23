@@ -8,6 +8,8 @@ import {
 	Group,
 	Card,
 	ActionIcon,
+	Tooltip,
+	Switch
 } from '@mantine/core';
 import { useState, useRef, useEffect } from 'react';
 import { MoonStars, Sun, Trash } from 'tabler-icons-react';
@@ -17,9 +19,11 @@ import {
 	ColorSchemeProvider,
 } from '@mantine/core';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
+import axios from 'axios';
 
+const API_URL = 'api/todos'
 export default function App() {
-	const [tasks, setTasks] = useState([]);
+	const [todos, setTodos] = useState([]);
 	const [opened, setOpened] = useState(false);
 
 	const [colorScheme, setColorScheme] = useLocalStorage({
@@ -27,59 +31,36 @@ export default function App() {
 		defaultValue: 'light',
 		getInitialValueInEffect: true,
 	});
-	const toggleColorScheme = value =>
-		setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
-
-	useHotkeys([['mod+J', () => toggleColorScheme()]]);
-
-	const taskTitle = useRef('');
-	const taskSummary = useRef('');
-
-	function createTask() {
-		setTasks([
-			...tasks,
-			{
-				title: taskTitle.current.value,
-				summary: taskSummary.current.value,
-			},
-		]);
-
-		saveTasks([
-			...tasks,
-			{
-				title: taskTitle.current.value,
-				summary: taskSummary.current.value,
-			},
-		]);
-	}
-
-	function deleteTask(index) {
-		var clonedTasks = [...tasks];
-
-		clonedTasks.splice(index, 1);
-
-		setTasks(clonedTasks);
-
-		saveTasks([...clonedTasks]);
-	}
-
-	function loadTasks() {
-		let loadedTasks = localStorage.getItem('tasks');
-
-		let tasks = JSON.parse(loadedTasks);
-
-		if (tasks) {
-			setTasks(tasks);
-		}
-	}
-
-	function saveTasks(tasks) {
-		localStorage.setItem('tasks', JSON.stringify(tasks));
-	}
 
 	useEffect(() => {
-		loadTasks();
+		fetchTodos();
 	}, []);
+	const fetchTodos = async () => {
+		const response = await axios.get(API_URL);
+		setTodos(response.data);
+	};
+	const toggleColorScheme = value =>
+		setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+	useHotkeys([['mod+J', () => toggleColorScheme()]]);
+
+	const addTodo = async () => {
+		const response = await axios.post(API_URL, { title: todoTitle.current.value, completed: false });
+		setTodos([...todos, response.data]);
+	};
+
+	const toggleComplete = async (todo) => {
+		const response = await axios.put(`${API_URL}/${todo.id}`, { title: todo.title, completed: !todo.completed });
+		setTodos(todos.map(_todo => (_todo.id === todo.id ? response.data : _todo)));
+	};
+
+	const deleteTodo = async id => {
+		await axios.delete(`${API_URL}/${id}`);
+		setTodos(todos.filter(todo => todo.id !== id));
+	};
+
+
+	const todoTitle = useRef('');
+
 
 	return (
 		<ColorSchemeProvider
@@ -101,16 +82,10 @@ export default function App() {
 						centered>
 						<TextInput
 							mt={'md'}
-							ref={taskTitle}
+							ref={todoTitle}
 							placeholder={'Task Title'}
 							required
 							label={'Title'}
-						/>
-						<TextInput
-							ref={taskSummary}
-							mt={'md'}
-							placeholder={'Task Summary'}
-							label={'Summary'}
 						/>
 						<Group mt={'md'} position={'apart'}>
 							<Button
@@ -122,7 +97,7 @@ export default function App() {
 							</Button>
 							<Button
 								onClick={() => {
-									createTask();
+									addTodo();
 									setOpened(false);
 								}}>
 								Create Task
@@ -136,7 +111,7 @@ export default function App() {
 									fontFamily: `Greycliff CF, ${theme.fontFamily}`,
 									fontWeight: 900,
 								})}>
-								My Tasks version 3
+								Simple Todo App
 							</Title>
 							<ActionIcon
 								color={'blue'}
@@ -149,27 +124,35 @@ export default function App() {
 								)}
 							</ActionIcon>
 						</Group>
-						{tasks.length > 0 ? (
-							tasks.map((task, index) => {
-								if (task.title) {
+						{todos.length > 0 ? (
+							todos.map((todo) => {
+								if (todo.title) {
 									return (
-										<Card withBorder key={index} mt={'sm'}>
+										<Card withBorder key={todo.id} mt={'sm'}>
 											<Group position={'apart'}>
-												<Text weight={'bold'}>{task.title}</Text>
-												<ActionIcon
-													onClick={() => {
-														deleteTask(index);
-													}}
-													color={'red'}
-													variant={'transparent'} data-testid={`delete-task-${index}`}>
-													<Trash />
-												</ActionIcon>
+												<Text weight={'bold'}>{todo.title}</Text>
+												<Group justify="right">
+													<Tooltip label="Toggle task completion">
+														<Switch
+															checked={todo.completed}
+															onChange={() => {
+																toggleComplete(todo)
+															}}
+															variant={'transparent'} data-testid={`complete-todo-${todo.id}`}>
+														</Switch>
+													</Tooltip>
+													<ActionIcon
+														onClick={() => {
+															deleteTodo(todo.id)
+														}}
+														color={'red'}
+														variant={'transparent'} data-testid={`delete-todo-${todo.id}`}>
+														<Trash />
+													</ActionIcon>
+												</Group>
 											</Group>
-											<Text color={'dimmed'} size={'md'} mt={'sm'}>
-												{task.summary
-													? task.summary
-													: 'No summary was provided for this task'}
-											</Text>
+
+
 										</Card>
 									);
 								}
@@ -177,7 +160,7 @@ export default function App() {
 							})
 						) : (
 							<Text size={'lg'} mt={'md'} color={'dimmed'}>
-								You have no tasks
+								You have no todos
 							</Text>
 						)}
 						<Button

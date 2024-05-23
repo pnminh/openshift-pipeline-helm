@@ -17,8 +17,7 @@ spec:
       image: quay.io/pnminh232/ubi8-extra:1.0.1
       imagePullPolicy: Always
       script: |
-        ls $(workspaces.source.path)
-        cat $(workspaces.source.path)/$(app-config-file-path) | yq -ojson -I0|jq @json > $(results.app-configs.path)
+        cat $(workspaces.source.path)/$(params.app-config-file-path) | yq -ojson -I0 > $(results.app-configs.path)
   workspaces:
     - name: source
       description: "Workspace containing the yaml file"

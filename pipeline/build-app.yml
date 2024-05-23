@@ -30,18 +30,6 @@ spec:
       workspaces:
         - name: output
           workspace: source
-    - name: retrieve-app-configs
-      params:
-        - name: yaml-file-path
-          value: apps/todo-ui/app.config.yaml
-      runAfter:
-        - git-clone-source
-      taskRef:
-        kind: Task
-        name: yaml-to-result-object
-      workspaces:
-        - name: source
-          workspace: source
     - name: npm-build
       params:
         - name: PATH_CONTEXT
@@ -57,10 +45,22 @@ spec:
         kind: Task
         name: npm
       when:
-        - input: $(tasks.retrieve-app-configs.results.yaml-obj.build.type)
-          operator: notin
+        - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
+          operator: in
           values:
             - npm
+      workspaces:
+        - name: source
+          workspace: source
+    - name: retrieve-app-configs
+      params:
+        - name: app-config-file-path
+          value: apps/todo-ui/app-config.yaml
+      runAfter:
+        - git-clone-source
+      taskRef:
+        kind: Task
+        name: app-configs
       workspaces:
         - name: source
           workspace: source

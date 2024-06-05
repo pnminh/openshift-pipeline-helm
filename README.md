@@ -477,7 +477,7 @@ This comprehensive guide covers the setup and configuration of a CI/CD pipeline 
 
 ### Steps
 ```
-podman build  --platform linux/amd64 -t ubi8-build-image:1.0.0 ./images/build-base
+podman build  --platform linux/amd64 -t ubi9-build-image:1.0.0 ./images/build-base
 oc create secret docker-registry --docker-server quay.io --docker-username $QUAY_USERNAME --docker-password $QUAY_TOKEN quay-auth
 # add to builder service account
 oc secrets link builder quay-auth --for=pull,mount

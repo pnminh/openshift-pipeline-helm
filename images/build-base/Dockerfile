@@ -5,7 +5,10 @@ ARG HELM_VERSION="3.13.2"
 ARG YQ_VERSION="v4.41.1"
 ARG MAVEN_VERSION="3.8.8"
 ARG NODEJS_VERSION="20"
-ENV MAVEN_OPTS="-Duser.home=/tmp/maven" MAVEN_HOME="/opt/maven" M2_HOME="/opt/maven" PATH=/opt/maven/bin:${PATH}
+ENV MAVEN_OPTS="-Duser.home=/tmp/maven" \
+    MAVEN_HOME="/opt/maven" M2_HOME="/opt/maven" \
+    PATH=/opt/maven/bin:${PATH} \
+    npm_config_cache=/tmp/.npm
 RUN microdnf update -y && microdnf -y module disable nodejs && \
     microdnf -y module enable nodejs:$NODEJS_VERSION && microdnf install -y $PKGS && \
     curl -L  https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -o /usr/bin/yq && \

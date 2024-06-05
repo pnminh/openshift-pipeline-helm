@@ -1,0 +1,19 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ubi9-build-image
+spec:
+  source:
+    type: Git
+    git:
+      uri: "https://github.com/pnminh/openshift-pipeline-helm.git"
+      ref: tekton # Change to the appropriate branch if needed
+    contextDir: "images/build-path" # Directory containing the Dockerfile
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile # Default Dockerfile name, change if different
+  output:
+    to:
+      kind: DockerImage
+      name: quay.io/pnminh232/ubi9-build-image:1.0.0

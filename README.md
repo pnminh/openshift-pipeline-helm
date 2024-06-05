@@ -467,10 +467,22 @@ spec:
       value: "latest"
 ```
 
-Apply the PipelineRun: `oc apply -f pipelinerun.yaml`
+Apply the PipelineRun: `oc create -f pipelinerun.yaml`
 
 This PipelineRun will start the CI/CD process, building the image, running tests, and deploying to each environment sequentially.
 
 ### Conclusion
 
 This comprehensive guide covers the setup and configuration of a CI/CD pipeline for a ReactJS ToDo application using Tekton, Helm, and OpenShift. By following these steps, you can automate the entire process from code commit to deployment in dev, stage, and prod environments, ensuring quality through unit tests, static analysis, and integration tests, with the flexibility of blue-green deployments.
+
+### Steps
+```
+oc create secret docker-registry --docker-server quay.io --docker-username $QUAY_USERNAME --docker-password $QUAY_TOKEN quay-auth
+# add to builder service account
+oc secrets link builder quay-auth --for=pull,mount
+oc apply -f images/build-base/bc.yaml 
+oc apply -f pipeline/tasks
+oc apply -f pipeline/workspace
+oc apply -f pipeline/build-app.yml
+oc create -f pipeline/build-app-run.yml #run each time we need to run the pipeline
+```

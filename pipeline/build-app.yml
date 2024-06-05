@@ -33,17 +33,12 @@ spec:
     - name: npm-build
       params:
         - name: PATH_CONTEXT
-          value: .
-        - name: ARGS
-          value:
-            - version
-        - name: IMAGE
-          value: 'docker.io/library/node:12-alpine@sha256:dfbebf17bfb014e1e7068e76325a117bccf8679c68aec6a28514184a209c8bae'
+          value: apps/ $(params.app)
       runAfter:
         - retrieve-app-configs
       taskRef:
         kind: Task
-        name: npm
+        name: npm-build
       when:
         - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
           operator: in

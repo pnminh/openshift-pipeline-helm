@@ -33,7 +33,7 @@ spec:
     - name: npm-build
       params:
         - name: PATH_CONTEXT
-          value: apps/ $(params.app)
+          value: apps/$(params.app)
       runAfter:
         - retrieve-app-configs
       taskRef:

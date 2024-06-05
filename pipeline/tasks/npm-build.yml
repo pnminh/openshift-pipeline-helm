@@ -9,24 +9,23 @@ spec:
       description: The directory where the npm commands will be run
       type: string
   steps:
-    - name: npm-lint
-      image: quay.io/pnminh232/ubi8-build-image:1.0.0
-      workingDir: $(params.PATH_CONTEXT)
+    - name: npm-install
+      image: quay.io/pnminh232/ubi9-build-image:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
       script: |
         #!/bin/sh
         set -e
-        npm run lint
-
+        npm install
     - name: npm-test
-      image: quay.io/pnminh232/ubi8-build-image:1.0.0
-      workingDir: $(params.PATH_CONTEXT)
+      image: quay.io/pnminh232/ubi9-build-image:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
       script: |
         #!/bin/sh
         set -e
         npm test
     - name: npm-ci
-      image: quay.io/pnminh232/ubi8-build-image:1.0.0
-      workingDir: $(params.PATH_CONTEXT)
+      image: quay.io/pnminh232/ubi9-build-image:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
       script: |
         #!/bin/sh
         set -e

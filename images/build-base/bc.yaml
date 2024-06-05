@@ -8,7 +8,7 @@ spec:
     git:
       uri: "https://github.com/pnminh/openshift-pipeline-helm.git"
       ref: tekton # Change to the appropriate branch if needed
-    contextDir: "images/build-path" # Directory containing the Dockerfile
+    contextDir: "images/build-base" # Directory containing the Dockerfile
   strategy:
     type: Docker
     dockerStrategy:

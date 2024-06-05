@@ -15,6 +15,7 @@ spec:
       script: |
         #!/bin/sh
         set -e
+        export CYPRESS_CACHE_FOLDER=/tmp/.cache
         npm install
     - name: npm-test
       image: quay.io/pnminh232/ubi9-build-image:1.0.0

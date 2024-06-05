@@ -18,7 +18,6 @@ spec:
       image: quay.io/pnminh232/ubi9-build-image:1.0.0
       imagePullPolicy: Always
       script: |
-        #!/usr/bin/env bash
         cat $(workspaces.source.path)/$(params.app-config-file-path) | yq -ojson -I0 > $(results.app-configs.path)
   workspaces:
     - name: source

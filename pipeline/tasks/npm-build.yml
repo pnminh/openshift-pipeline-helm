@@ -9,14 +9,14 @@ spec:
       description: The directory where the npm commands will be run
       type: string
   steps:
-    - name: npm-install
+    - name: npm-ci
       image: quay.io/pnminh232/ubi9-build-image:1.0.0
       workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
       script: |
         #!/bin/sh
         set -e
         export CYPRESS_CACHE_FOLDER=/tmp/.cache
-        npm install
+        npm ci
     - name: npm-test
       image: quay.io/pnminh232/ubi9-build-image:1.0.0
       workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
@@ -24,13 +24,13 @@ spec:
         #!/bin/sh
         set -e
         npm test
-    - name: npm-ci
+    - name: npm-build
       image: quay.io/pnminh232/ubi9-build-image:1.0.0
       workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
       script: |
         #!/bin/sh
         set -e
-        npm ci
+        npm run build
   workspaces:
     - name: source
       description: "Workspace containing the build"

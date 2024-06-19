@@ -77,6 +77,19 @@ spec:
         - name: source
           workspace: source
     - name: build-and-push-image
-    
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: SOURCE_DIR
+          value: $(tasks.retrieve-app-configs.results.app-configs.build-binary-dir)
+      taskRef: 
+        kind: Task
+        name: build-and-push-image
+      runAfter:
+        - npm-build
+        - maven-build
+      workspaces:
+        - name: source
+          workspace: source
   workspaces:
     - name: source

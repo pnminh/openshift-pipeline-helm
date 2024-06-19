@@ -13,6 +13,8 @@ spec:
       type: object
       properties:
         build-type: {}       
+        build-binary-dir: {}
+        deploy-gitops-repo: {}
   steps:
     - name: yaml-to-result-object
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0

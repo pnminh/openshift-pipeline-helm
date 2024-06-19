@@ -1,7 +1,2 @@
-build:
-  type: container-image
-  distribution-dir: build
-  package: {}
-deploy: {}
-provision:
-  dir: provision
+build-type: docker
+deploy-gitops-repo: https://github.wwt.com/phammi/app-gitops-configs.git

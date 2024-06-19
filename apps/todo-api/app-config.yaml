@@ -1,1 +1,7 @@
-build-type: mvn
+build:
+  type: mvn
+  distribution_dir: target/lib
+  package: {}
+deploy:
+  gitops-repo: https://github.wwt.com/phammi/app-gitops-configs.git
+provision: {}

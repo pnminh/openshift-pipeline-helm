@@ -1,1 +1,8 @@
-build-type: npm
+build:
+  type: npm
+  distribution_dir: build
+  package:
+    s2i-image: registry.access.redhat.com/ubi9/nginx-120
+deploy:
+  gitops-repo: https://github.wwt.com/phammi/app-gitops-configs.git
+provision: {}

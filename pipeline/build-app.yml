@@ -30,9 +30,21 @@ spec:
       workspaces:
         - name: output
           workspace: source
+    - name: retrieve-app-configs
+      params:
+        - name: app-config-file-path
+          value: apps/todo-ui/app-config.yaml
+      runAfter:
+        - git-clone-source
+      taskRef:
+        kind: Task
+        name: app-configs
+      workspaces:
+        - name: source
+          workspace: source
     - name: npm-build
       params:
-        - name: PATH_CONTEXT
+        - name: PATH_CONTEXT  
           value: apps/$(params.app)
       runAfter:
         - retrieve-app-configs
@@ -47,17 +59,24 @@ spec:
       workspaces:
         - name: source
           workspace: source
-    - name: retrieve-app-configs
+    - name: maven-build
       params:
-        - name: app-config-file-path
-          value: apps/todo-ui/app-config.yaml
+        - name: PATH_CONTEXT  
+          value: apps/$(params.app)
       runAfter:
-        - git-clone-source
+        - retrieve-app-configs
       taskRef:
         kind: Task
-        name: app-configs
+        name: npm-build
+      when:
+        - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
+          operator: in
+          values:
+            - mvn
       workspaces:
         - name: source
           workspace: source
+    - name: build-and-push-image
+    
   workspaces:
     - name: source

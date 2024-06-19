@@ -1,10 +1,23 @@
 package com.example.todo;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-public class Todo extends PanacheEntity {
-    public String title;
-    public boolean completed;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Todo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String title;
+    private boolean completed;
+
+
 }

@@ -1,0 +1,12 @@
+apiVersion: v2
+name: todo-db
+description: A Helm chart for todo-db
+type: application
+version: 0.1.0
+dependencies:
+  - name: k8s-job
+    version: ">=0.1.0"
+    repository: "https://pnminh.github.io/helm-repo"
+  - name: library-chart
+    version: 0.1.x
+    repository: "https://pnminh.github.io/helm-repo"

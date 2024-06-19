@@ -2,6 +2,7 @@ package com.example.todo;
 
 import java.util.List;
 
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,16 +20,18 @@ import jakarta.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 public class TodoResource {
 
+    @Inject
+    TodoRepository todoRepository;
+
     @GET
     public List<Todo> getAll() {
-        return Todo.listAll();
+        return todoRepository.listAll();
     }
 
     @POST
     @Transactional
     public Todo create(Todo todo) {
-        todo.id = null;
-        todo.persist();
+        todoRepository.persist(todo);
         return todo;
     }
 
@@ -36,12 +39,13 @@ public class TodoResource {
     @Path("{id}")
     @Transactional
     public Todo update(@PathParam("id") Long id, Todo todo) {
-        Todo entity = Todo.findById(id);
+        List<Todo> entities = todoRepository.listAll();
+        Todo entity = todoRepository.findById(id);
         if (entity == null) {
             throw new WebApplicationException("Todo with id of " + id + " does not exist.", 404);
         }
-        entity.title = todo.title;
-        entity.completed = todo.completed;
+        entity.setTitle(todo.getTitle());
+        entity.setCompleted(todo.isCompleted());
         return entity;
     }
 
@@ -49,10 +53,10 @@ public class TodoResource {
     @Path("{id}")
     @Transactional
     public void delete(@PathParam("id") Long id) {
-        Todo entity = Todo.findById(id);
+        Todo entity = todoRepository.findById(id);
         if (entity == null) {
             throw new WebApplicationException("Todo with id of " + id + " does not exist.", 404);
         }
-        entity.delete();
+        todoRepository.delete(entity);
     }
 }

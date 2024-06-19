@@ -1,0 +1,8 @@
+build-app:
+  strategy: docker
+  dockerfilePath: Dockerfile
+  target:
+    image:
+      registry: quay.io/pnminh232/registry-dev
+      path: todo-db
+      tag: "1.0.0" #override during runtime

@@ -1,0 +1,7 @@
+build:
+  type: container-image
+  distribution-dir: build
+  package: {}
+deploy: {}
+provision:
+  dir: provision

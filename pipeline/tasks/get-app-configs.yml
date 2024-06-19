@@ -15,7 +15,7 @@ spec:
         build-type: {}       
   steps:
     - name: yaml-to-result-object
-      image: quay.io/pnminh232/ubi9-build-image:1.0.0
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
       imagePullPolicy: Always
       script: |
         cat $(workspaces.source.path)/$(params.app-config-file-path) | yq -ojson -I0 > $(results.app-configs.path)

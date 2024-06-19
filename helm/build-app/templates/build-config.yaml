@@ -15,11 +15,21 @@ spec:
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
   strategy:
+    {{- if eq .Values.strategy "docker" }}
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: "{{ .Values.dockerfilePath | default 'Dockerfile' }}"
+    {{- else if eq .Values.strategy "s2i" }}
     type: Binary
     sourceStrategy:
       from:
         kind: DockerImage
         name: "{{ .Values.source.image.repository }}:{{ .Values.source.image.tag | default .Chart.AppVersion }}"
+    {{- end }}
   source:
+    {{- if eq .Values.strategy "docker" }}
+    type: Binary
+    {{- else if eq .Values.strategy "s2i" }}
     binary: {}
+    {{- end }}
   runPolicy: Serial

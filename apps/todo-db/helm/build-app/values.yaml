@@ -1,6 +1,6 @@
 build-app:
   strategy: docker
-  dockerfilePath: Dockerfile
+  #dockerfilePath: Dockerfile
   target:
     image:
       registry: quay.io/pnminh232/registry-dev

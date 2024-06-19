@@ -10,7 +10,7 @@ spec:
       name: "{{ .Values.target.image.pushSecret }}"
     to:
       kind: DockerImage
-      name: "{{ .Values.target.image.registry }}/{{ .Values.target.image.path }}:{{ .Values.target.image.tag | default "latest" }}"
+      name: {{ .Values.target.image.registry }}/{{ .Values.target.image.path }}:{{ .Values.target.image.tag | default "latest" }}
   resources: {}
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
@@ -18,7 +18,7 @@ spec:
     {{- if eq .Values.strategy "docker" }}
     type: Docker
     dockerStrategy:
-      dockerfilePath: "{{ .Values.dockerfilePath | default 'Dockerfile' }}"
+      dockerfilePath: {{ .Values.dockerfilePath | default "Dockerfile" }}
     {{- else if eq .Values.strategy "s2i" }}
     type: Binary
     sourceStrategy:

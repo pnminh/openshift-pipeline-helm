@@ -16,23 +16,22 @@ spec:
   steps:
     - name: create-build-config
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
-      workingDir: $(workspaces.source.path)/apps/${params.APP_NAME}/helm/build-app
+      workingDir: $(workspaces.source.path)/apps/$(params.APP_NAME)/helm/build-app
       script: |
         #!/bin/sh
         set -e
-        ls -al
         helm dependency update
-        helm upgrade --install ${params.APP_NAME} .
+        helm upgrade --install $(params.APP_NAME) .
     - name: run-s2i-build
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
-      workingDir: $(workspaces.source.path)/apps/${params.APP_NAME}
+      workingDir: $(workspaces.source.path)/apps/$(params.APP_NAME)
       script: |
         #!/bin/sh
         set -e
         if [ -n "$SOURCE_DIR" ]; then
-          oc start-build ${params.APP_NAME} --from-dir="$(params.SOURCE_DIR)" --follow
+          oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow
         else
-          oc start-build ${params.APP_NAME} --follow
+          oc start-build $(params.APP_NAME) --follow
         fi
   workspaces:
     - name: source

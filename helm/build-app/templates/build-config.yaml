@@ -27,9 +27,5 @@ spec:
         name: "{{ .Values.source.image.repository }}:{{ .Values.source.image.tag | default .Chart.AppVersion }}"
     {{- end }}
   source:
-    {{- if eq .Values.strategy "docker" }}
-    type: Binary
-    {{- else if eq .Values.strategy "s2i" }}
     binary: {}
-    {{- end }}
   runPolicy: Serial

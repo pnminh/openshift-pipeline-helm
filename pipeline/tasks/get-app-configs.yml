@@ -21,7 +21,6 @@ spec:
       imagePullPolicy: Always
       script: |-
         cat $(workspaces.source.path)/$(params.app-config-file-path) | \
-          yq eval 'select(.build-binary-dir == null) | .build-binary-dir=""' -  | \
           yq -ojson -I0 > $(results.app-configs.path)
   workspaces:
     - name: source

@@ -12,7 +12,6 @@ spec:
     - name: SOURCE_DIR
       description: The directory to the source to be included with s2i image, relative to APP_NAME directory
       type: string
-      default: ""
   steps:
     - name: create-build-config
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
@@ -28,11 +27,8 @@ spec:
       script: |
         #!/bin/sh
         set -e
-        if [ -n "$SOURCE_DIR" ]; then
-          oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow
-        else
-          oc start-build $(params.APP_NAME) --follow
-        fi
+        echo "oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow"
+        oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow
   workspaces:
     - name: source
       description: "Workspace containing the build"

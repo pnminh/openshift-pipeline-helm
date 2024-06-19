@@ -20,7 +20,7 @@ spec:
       script: |
         #!/bin/sh
         set -e
-        ls
+        ls -al
         helm dependency update
         helm upgrade --install ${params.APP_NAME} .
     - name: run-s2i-build

@@ -33,7 +33,7 @@ spec:
     - name: retrieve-app-configs
       params:
         - name: app-config-file-path
-          value: apps/todo-ui/app-config.yaml
+          value: apps/$(params.app)/app-config.yaml
       runAfter:
         - git-clone-source
       taskRef:

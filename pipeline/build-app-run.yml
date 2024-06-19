@@ -16,4 +16,6 @@ spec:
     value: https://github.com/pnminh/openshift-pipeline-helm.git
   - name: repo-revision
     value: tekton
+  - name: app
+    value: todo-db
   

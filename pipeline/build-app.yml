@@ -82,6 +82,8 @@ spec:
           value: $(params.app)
         - name: SOURCE_DIR
           value: $(tasks.retrieve-app-configs.results.app-configs.build-binary-dir)
+        - name: COMMIT_HASH
+          value: $(tasks.git-clone-source.results.commit)
       taskRef: 
         kind: Task
         name: build-and-push-image

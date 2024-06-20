@@ -11,6 +11,9 @@ spec:
       type: string    
     - name: SOURCE_DIR
       description: The directory to the source to be included with s2i image, relative to APP_NAME directory
+      type: string    
+    - name: COMMIT_HASH
+      description: The git commit hash to be used for image tag
       type: string
   steps:
     - name: create-build-config
@@ -19,15 +22,16 @@ spec:
       script: |
         #!/bin/sh
         set -e
+        COMMIT_HASH=$(params.COMMIT_HASH)
+        IMAGE_TAG="${COMMIT_HASH:0:7}"
         helm dependency update
-        helm upgrade --install $(params.APP_NAME) .
+        helm upgrade --install $(params.APP_NAME) --set "build-app.target.image.tag"=$IMAGE_TAG  .
     - name: run-s2i-build
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
       workingDir: $(workspaces.source.path)/apps/$(params.APP_NAME)
       script: |
         #!/bin/sh
         set -e
-        echo "oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow"
         oc start-build $(params.APP_NAME) --from-dir="$(params.SOURCE_DIR)" --follow
   workspaces:
     - name: source

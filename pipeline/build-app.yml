@@ -67,7 +67,7 @@ spec:
         - retrieve-app-configs
       taskRef:
         kind: Task
-        name: npm-build
+        name: maven-build
       when:
         - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
           operator: in

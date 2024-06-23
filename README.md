@@ -479,6 +479,7 @@ This comprehensive guide covers the setup and configuration of a CI/CD pipeline 
 ```
 podman build  --platform linux/amd64 -t ubi9-build-image:1.0.0 ./images/build-base
 oc create secret docker-registry --docker-server quay.io --docker-username $QUAY_USERNAME --docker-password $QUAY_TOKEN quay-io
+oc create secret generic git-creds --from-literal GIT_USER=$TEKTON_GIT_USER --from-literal GIT_TOKEN=$TEKTON_GIT_PASSWORD
 # add to builder service account
 oc secrets link builder quay-io --for=pull,mount
 oc secrets link pipeline quay-io --for=pull,mount

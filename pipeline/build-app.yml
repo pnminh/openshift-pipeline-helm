@@ -93,5 +93,41 @@ spec:
       workspaces:
         - name: source
           workspace: source
+    - name: git-clone-deployment-repo
+      params:
+        - name: url
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: revision
+          value: tekton
+        - name: subdirectory
+          value: deployment-repo
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: source
+      runAfter:
+        - build-and-push-image
+    - name: update-dev-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: dev        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "true"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - git-clone-deployment-repo
   workspaces:
     - name: source

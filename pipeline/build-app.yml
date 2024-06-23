@@ -129,5 +129,46 @@ spec:
           workspace: source
       runAfter:
         - git-clone-deployment-repo
+    # Todo: Run integration test
+    - name: update-stage-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: stage        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "true"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - update-dev-deployment
+    - name: update-prod-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: prod        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "false"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - update-stage-deployment
   workspaces:
     - name: source

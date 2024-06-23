@@ -36,7 +36,7 @@ spec:
         #!/bin/sh
         export GIT_CONFIG_GLOBAL=/tmp/.gitconfig # ~/.gitconfig is not accessible
         GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
-        BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)
+        BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
         git config --global --add safe.directory  $(workspaces.source.path)/deployment-repo
         git config --global user.name "$GIT_USER"
         git config --global user.email "$GIT_USER@users.noreply.github.com"
@@ -64,7 +64,7 @@ spec:
         GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
         REPO=$(echo $GIT_URL | sed 's/https:\/\/github.com\///' | sed 's/\.git//')
         IMAGE_TAG=$(params.IMAGE_TAG)
-        SOURCE_BRANCH=$(params.APP_NAME)-$(params.IMAGE_TAG)
+        SOURCE_BRANCH=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
         TARGET_BRANCH=tekton
         PR_RESPONSE=$(curl -s -X POST -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls -d '{"title":"Update image tag to $IMAGE_TAG","head":"'$SOURCE_BRANCH'","base":"'$TARGET_BRANCH'"}')
         PR_URL=$(echo $PR_RESPONSE | jq -r '.html_url')
@@ -90,7 +90,7 @@ spec:
           export GIT_CONFIG_GLOBAL=/tmp/.gitconfig
           GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
           REPO=$(echo $GIT_URL | sed 's/https:\/\/github.com\///' | sed 's/\.git//')
-          BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)
+          BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
           PR_NUMBER=$(curl -s -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls | jq -r '[.[] | select(.head.ref == "'$BRANCH_NAME'")] | .[0].number')
           curl -s -X PUT -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/merge -d '{"merge_method":"merge"}'
           echo "PR #$PR_NUMBER merged"

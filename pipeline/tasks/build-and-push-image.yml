@@ -30,7 +30,7 @@ spec:
         IMAGE_TAG="${COMMIT_HASH:0:7}"
         helm dependency update
         helm upgrade --install $(params.APP_NAME) --set "build-app.target.image.tag"=$IMAGE_TAG  .
-        echo $IMAGE_TAG > $(results.image-tag.path)
+        echo -n $IMAGE_TAG > $(results.image-tag.path)
     - name: run-s2i-build
       image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
       workingDir: $(workspaces.source.path)/apps/$(params.APP_NAME)

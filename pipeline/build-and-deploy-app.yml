@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: build-app
+  name: build-and-deploy-app
   namespace: apps
 spec:
   params:

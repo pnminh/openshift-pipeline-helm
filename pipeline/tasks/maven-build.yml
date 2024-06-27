@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: maven-build
+  namespace: apps
+spec:
+  params:
+    - name: PATH_CONTEXT
+      description: The directory where the Maven commands will be run
+      type: string
+  steps:
+    - name: mvn-build
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
+      script: |
+        #!/bin/sh
+        set -e
+        # https://github.com/quarkusio/quarkus/issues/11449
+        MAVEN_OPTS="-Duser.home=$(workspaces.source.path)/maven" mvn -Dmaven.repo.local=$(workspaces.source.path)/maven/.m2/repository clean package
+  workspaces:
+    - name: source
+      description: "Workspace containing the build"

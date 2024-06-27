@@ -1,429 +1,127 @@
-Building and Deploying a ReactJS ToDo App with Tekton and Helm Charts on OpenShift
-----------------------------------------------------------------------------------
+# Conquer Builds and Deployments with Tekton Pipelines: Your Automated BFF!
+Have you ever dreamt of a world where deploying your applications happens effortlessly? No more wrestling with complex commands or scrambling to fix errors. Well, dream no more! Tekton Pipelines is here to transform your deployment process from a chore into a smooth, automated ride.
 
-In this blog post, we'll walk through the process of setting up a CI/CD pipeline for a ReactJS ToDo application using Tekton and Helm Charts on an OpenShift cluster. The pipeline will include building the Docker image, running unit tests, performing static code analysis, and deploying the app across development (dev), staging (stage), and production (prod) environments using blue-green deployment strategies. We'll use Quay.io as our Docker image registry.
+This blog post dives into the exciting world of Tekton Pipelines, guiding you through building and deploying a cool to-do list application. Even if you're new to DevOps, we'll break things down into easy-to-understand steps.
 
-### Prerequisites
+**Imagine this**: You've built a fantastic to-do list app with a sleek user interface (built with ReactJS) and a powerful backend (powered by Quarkus). Now, you want to share it with the world, but the thought of manually deploying it to different environments (development, staging, production) makes you groan.
 
-1.  An OpenShift cluster with Tekton and Helm installed.
-2.  Quay.io account for Docker image registry.
-3.  A ReactJS ToDo application source code repository.
-4.  Cypress for integration testing.
-5.  Access to static code analysis tools (e.g., ESLint for JavaScript).
+**Enter Tekton Pipelines!** It's like a friendly robot chef in your development kitchen. You tell it what ingredients you have (your code) and what dish you want to cook (your deployed app), and it takes care of the rest. It follows a recipe (called a pipeline) with clear instructions, ensuring a delicious deployment every single time.
 
-### Step-by-Step Guide
+**Here's a sneak peek at the magic Tekton performs:**
 
-#### 1\. Setting Up Tekton Pipelines
+1. **Code on the Move**: Tekton grabs the code for your to-do list app from your favorite code repository (like GitHub).
+2. **Config Check**: It then checks a special file named app-config.yaml to understand how to build and deploy your app. Think of it as a secret recipe that tells Tekton exactly what spices to use (build commands) for your unique app.
+3. **Build Like a Boss**: Based on the recipe, Tekton builds your app, creating a special software package called a container image. This image is like a pre-assembled dish, ready to be served on any server.
+4. **Deployment Dance**: Tekton then waltzes over to your deployment configurations (stored in another code repository) and updates them with the new and improved image of your app. It can even create pull requests or automatically merge changes, depending on your preference.
+Voila! Your App is Live! With all the ingredients perfectly combined, Tekton deploys your to-do list app to the desired environment (dev, staging, or production). Now, you can start managing your tasks with ease!
 
-First, we need to set up Tekton Pipelines for our CI/CD workflow.
+**The Benefits are Tremendous!**
 
-**Pipeline Definition:**
+Using Tekton Pipelines brings a buffet of advantages to your development table:
 
-Create a `pipeline.yaml` file defining the pipeline with tasks for unit testing, static code analysis, building the Docker image, and deploying to different environments.
+ - **Say Goodbye to Manual Labor**: No more spending hours manually deploying your app. Tekton automates the process, freeing you up for more creative tasks.
+- **Version Control is Your Friend**: Tekton uses GitOps, which means your deployment configurations are stored in code repositories, just like your application code. This allows for easy tracking of changes and rollback if needed.
+- **Flexibility is the Spice of Life**: Tekton Pipelines are like building blocks. You can customize them to fit the unique needs of your app.
+- **Reuse and Recycle**: Once you create a Tekton task (like building your app), you can reuse it for other projects, saving you time and effort.
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
-  name: todo-app-pipeline
-spec:
-  tasks:
-    - name: unit-test
-      taskRef:
-        name: unit-test-task
-    - name: static-code-analysis
-      taskRef:
-        name: static-code-analysis-task
-    - name: build-image
-      taskRef:
-        name: build-image-task
-    - name: deploy-dev
-      taskRef:
-        name: deploy-task
-      runAfter:
-        - build-image
-      params:
-        - name: environment
-          value: dev
-    - name: integration-test-dev
-      taskRef:
-        name: integration-test-task
-      runAfter:
-        - deploy-dev
-      params:
-        - name: environment
-          value: dev
-    - name: promote-stage
-      taskRef:
-        name: promote-image-task
-      runAfter:
-        - integration-test-dev
-      params:
-        - name: target
-          value: stage
-    - name: deploy-stage
-      taskRef:
-        name: deploy-task
-      runAfter:
-        - promote-stage
-      params:
-        - name: environment
-          value: stage
-    - name: integration-test-stage
-      taskRef:
-        name: integration-test-task
-      runAfter:
-        - deploy-stage
-      params:
-        - name: environment
-          value: stage
-    - name: promote-prod
-      taskRef:
-        name: promote-image-task
-      runAfter:
-        - integration-test-stage
-      params:
-        - name: target
-          value: prod
-    - name: deploy-prod
-      taskRef:
-        name: deploy-task
-      runAfter:
-        - promote-prod
-      params:
-        - name: environment
-          value: prod
-    - name: acceptance-test-prod
-      taskRef:
-        name: acceptance-test-task
-      runAfter:
-        - deploy-prod
-      params:
-        - name: environment
-          value: prod`
-```
-#### 2\. Task Definitions
+## Building and Deploying Your App with Tekton Pipelines
 
-**Unit Test Task:**
+Now that we've whet your appetite, let's delve into the technical details. To create a smooth and automated pipeline, we'll leverage the following resources:
 
-Create a `unit-test-task.yaml` file for running unit tests.
+**Tekton Pipelines**: The star of the show, it automates the entire deployment process.   
+**Git Repository**: This is where your code resides, like a recipe book for your app.   
+**Persistent Volume Claim (PVC)**: This acts like a shared storage space for Tekton tasks to access data during the deployment process.   
+**Tekton Resources**: These are like building blocks (tasks, workspaces, pipelines) that Tekton uses to construct the deployment pipeline.   
+### The Benefits of This Approach:
+By leveraging Tekton Pipelines and the mentioned resources, you gain several advantages:
+  - **Automation Magic:** No more manual deployments, freeing you up for more creative endeavors.
+  - **Version Control is Your Sous Chef:** Everything is tracked in code repositories, making it easy to collaborate and roll back changes if needed.
+  - **Flexibility is the Spice of Life:** Tekton Pipelines are customizable, allowing you to tailor them to your specific project needs.
+  - **Reuse and Recycle Tasks:** Once created, Tekton tasks can be reused for other projects, saving you time and effort.
+
+## Cooking Time
+Now that you're familiar with the core concepts, let's get your hands dirty and build a Tekton pipeline for your to-do list application! Here's a breakdown of the steps involved:
+
+### Prerequisites:
+
+- OpenShift Cluster with Tekton Pipelines installed. Tekton can be installed with Openshift Pipelines Operator
+- ArgoCD instance up and connected to the target deployment clusters. On OpenShift, the OpenShift GitOps Operator not only helps with creating a fully run ArgoCD instance but also supports integration with managed clusters if you use [Red Hat Advanced Cluster Management for Kubernetes](https://www.redhat.com/en/technologies/management/advanced-cluster-management)
+
+### Application Stack Overview
+The "To Do" application stack is structured as follows:
+- **todo-ui:** A ReactJS front-end providing the user interface.
+- **todo-api:** A Quarkus back-end API handling the application's business logic.
+- **todo-db:** A PostgreSQL database for data persistence.
+The source code for the application resides in a single repository, while the deployment configurations are kept in a separate GitOps repository managed by ArgoCD.
+
+### Repository Structure
+#### [Application Repository](https://github.com/pnminh/openshift-pipeline-helm/tree/tekton/apps)
+Each component in the application repository contains a configuration file named app-config.yaml, which specifies build and deployment settings for Tekton. Here's an example configuration for todo-api:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: unit-test-task
-spec:
-  steps:
-    - name: run-unit-tests
-      image: node:14
-      script: |
-        npm install
-        npm run test `
+build-type: mvn
+build-binary-dir: target/lib
+deploy-gitops-repo: https://github.com/your-org/app-gitops-configs.git
 ```
+#### [Deployment Repository](https://github.com/pnminh/app-gitops-configs)
+The deployment repository follows a structured layout to manage different environments and applications:
 
-**Static Code Analysis Task:**
+- **apps:** Contains Argo applications for deployment to OpenShift. This includes a sub-directory for different environments, each with specific configuration files.
+- **appssets:** Contains ApplicationSet resources for deploying multiple applications across environments.
+- **scripts:** Utility scripts, such as create-new-app.sh, to initialize the structure for new applications.
 
-Create a `static-code-analysis-task.yaml` file for performing static code analysis.
+## Pipeline Configurations
+### [Pipeline Resources](./pipeline/build-and-deploy-app.yml)
+The `build-app` pipeline consists of several tasks executed sequentially, each performing a specific action:
+1. **git-clone-source**: This task, like a sous chef, grabs the code for your to-do list app from your Git repository.
+2. **retrieve-app-configs**: This task acts like a recipe interpreter, reading a special file named `app-config.yaml`. This file contains crucial information on how to build and deploy your app, similar to how a recipe specifies ingredients and cooking instructions.
+3. **npm-build (conditional)**: Depending on the instructions in app-config.yaml, this task might be called upon. It's like a master chef following specific build commands (mentioned in the recipe) for your app's frontend (built with ReactJS in this case).
+4. **maven-build** (conditional): Similar to the previous task, this one follows build commands for your app's backend (powered by Quarkus), if applicable.
+5. **build-and-push-image**: This task is the master chef in action! It uses S2I (Source-to-Image) to build your app's container image, which is essentially a pre-packaged version of your app ready to run on any server. Imagine this as the final, delicious dish.
+6. **git-clone-deployment-repo**: This task retrieves the deployment configuration code from another Git repository. Think of it as fetching the instructions on how to serve the cooked dish (your app) to the guests (different environments).
+7. **update-dev-deployment, update-stage-deployment, update-prod-deployment**: These tasks are like waiters who update the deployment configurations for different environments (development, staging, production) with the new image of your app. They can even create pull requests or automatically merge changes, depending on your preference. It's like adding a final touch to the presentation before serving.
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: static-code-analysis-task
-spec:
-  steps:
-    - name: run-linter
-      image: node:14
-      script: |
-        npm install
-        npm run lint 
-```
+### [Tasks](./pipeline/tasks/)
+The `pipeline resources` mentioned previously combine tasks in a sequential order, defining the overall deployment workflow. These are reusable building blocks that define specific actions within the pipeline. We have predefined `ClusterTasks` that are part of OpenShift pipeline, such as `git-clone-source` that is used to clone the source code for your to-do list app from your Git repository, as well as some custom tasks that we create to support specific use cases:
+**retrieve-app-configs**: This task reads the app-config.yaml file to understand build and deployment configurations.   
+**npm-build**: This task executes npm build commands.   
+**maven-build**: This task executes Maven build commands.   
+**build-and-push-image**: This task builds your application container image using S2I and pushes it to a container registry.   
+**update-deployment-repo**: These tasks update deployment configurations for different environments with the new image tag and can create pull requests or automatically merge changes.   
+You can find detailed information on defining Tekton tasks in the official documentation https://www.redhat.com/architect/cicd-pipeline-openshift-tekton.
 
-**Build Image Task:**
+### [Workspaces](./pipeline/workspace/source-pvc.yml)
+In the sample code, Tekton utilizes a workspace named `source` which acts like your kitchen counter. It stores the downloaded code from both your application and deployment repositories, allowing tasks to easily access them during the deployment process.
 
-Create a `build-image-task.yaml` file to build the Docker image.
+### [PipelineRun](./pipeline/build-and-deploy-app-run.yml)
+A `PipelineRun` resource acts as the trigger, initiating the entire deployment process defined in the pipeline. With all the ingredients (code, configurations) and tools (Tekton resources) in place, Tekton executes the pipeline steps, automating the deployment of your to-do list app.
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: build-image-task
-spec:
-  steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor:latest
-      script: |
-        echo "{\"auths\":{\"quay.io\":{\"auth\":\"$(echo -n "$QUAY_USERNAME:$QUAY_PASSWORD" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-        /kaniko/executor --dockerfile=Dockerfile --destination=quay.io/$QUAY_USERNAME/todo-app:$COMMIT_SHA
-  params:
-    - name: QUAY_USERNAME
-      description: The Quay.io username
-    - name: QUAY_PASSWORD
-      description: The Quay.io password
-    - name: COMMIT_SHA
-      description: The commit SHA for the image tag
-```
-**Promote Image Task:**
+### Run the Pipeline with PipelineRun
 
-Create a `promote-image-task.yaml` file to promote the image to different Quay.io repositories.
+  - **Using oc command:** `oc create -f build-and-deploy-app-run.yml`
+  - **Using OpenShift Web Console:**
+    1. Go to the Pipelines section in the OpenShift web console.
+    2. Click on Pipeline Runs.
+    3. Click Create Pipeline Run.
+    4. Provide a name for your run and select the build-app pipeline.
+    5. Define the parameters (app name, Git repository details, etc.).
+    6. Click Create.
+### Monitor the Pipeline Execution
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: promote-image-task
-spec:
-  steps:
-    - name: promote-image
-      image: quay.io/skopeo/stable:latest
-      script: |
-        skopeo copy docker://quay.io/$QUAY_USERNAME/todo-app:$COMMIT_SHA docker://quay.io/$QUAY_USERNAME/todo-app-$TARGET:$COMMIT_SHA
-  params:
-    - name: QUAY_USERNAME
-      description: The Quay.io username
-    - name: COMMIT_SHA
-      description: The commit SHA for the image tag
-    - name: TARGET
-      description: The target environment (stage or prod)
-```
+Once you've triggered the pipeline run, you can monitor its progress within the OpenShift web console or using kubectl get pipelinerun. The pipeline will execute each task sequentially, building your application image and updating deployment configurations for your desired environments.
 
-**Deploy Task:**
+### Witnessing the Delicious Outcome!
 
-Create a `deploy-task.yaml` file to deploy the image to OpenShift.
+Upon successful completion of the pipeline run, your to-do list application will be deployed to the specified environments (development, staging, production) depending on your configuration. You can now access your application and start managing your tasks with ease!
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: deploy-task
-spec:
-  steps:
-    - name: deploy
-      image: 'bitnami/kubectl:latest'
-      script: |
-        kubectl config set-context --current --namespace=${params.environment}
-        kubectl set image deployment/todo-app todo-app=quay.io/$QUAY_USERNAME/todo-app:$COMMIT_SHA
-        kubectl rollout status deployment/todo-app
-  params:
-    - name: environment
-      description: The deployment environment (dev, stage, prod)
-    - name: COMMIT_SHA
-      description: The commit SHA for the image tag
-    - name: QUAY_USERNAME
-      description: The Quay.io username
-```
+**Bonus Tip:** Leverage Tekton Triggers to automate pipeline runs based on specific events, such as pushing code changes to your Git repository. This keeps your deployments even more streamlined.
 
-**Integration and Acceptance Test Tasks:**
+## Conclusion:
 
-Create `integration-test-task.yaml` and `acceptance-test-task.yaml` files for running Cypress tests.
+Tekton Pipelines empower you to automate the deployment process, freeing you from repetitive tasks and allowing you to focus on building amazing applications. With the knowledge you've gained, you can now leverage Tekton to streamline your deployments and embrace the magic of automation!
 
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: integration-test-task
-spec:
-  steps:
-    - name: run-cypress-tests
-      image: cypress/base:10
-      script: |
-        npm install
-        npm run cypress:run
-  params:
-    - name: environment
-      description: The deployment environment (dev, stage)
-```
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: acceptance-test-task
-spec:
-  steps:
-    - name: run-acceptance-tests
-      image: cypress/base:10
-      script: |
-        npm install
-        npm run cypress:run
-  params:
-    - name: environment
-      description: The deployment environment (prod)
-```
-
-#### 3\. Setting Up Helm Charts
-
-**Helm Chart Directory Structure:**
-
-```sh
-helm-charts/
-└── todo-app/
-    ├── Chart.yaml
-    ├── values.yaml
-    └── templates/
-        ├── deployment.yaml
-        ├── service.yaml
-        └── ingress.yaml
-```
-
-**Chart.yaml:**
-
-```yaml
-apiVersion: v2
-name: todo-app
-description: A Helm chart for Kubernetes
-type: application
-version: 0.1.0
-appVersion: "1.0"
-```
-
-**values.yaml:**
-
-```yaml
-replicaCount: 2
-
-image:
-  repository: quay.io/YOUR_QUAY_USERNAME/todo-app
-  tag: "latest"
-  pullPolicy: IfNotPresent
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: true
-  annotations: {}
-  hosts:
-    - host: todo-app.local
-      paths: ["/"]
-
-resources: {}
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-```
-
-**templates/deployment.yaml:**
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "todo-app.fullname" . }}
-spec:
-  replicas: {{ .Values.replicaCount }}
-  selector:
-    matchLabels:
-      app: {{ include "todo-app.name" . }}
-      release: {{ .Release.Name }}
-  template:
-    metadata:
-      labels:
-        app: {{ include "todo-app.name" . }}
-        release: {{ .Release.Name }}
-    spec:
-      containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          ports:
-            - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-```
-
-**templates/service.yaml:**
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "todo-app.fullname" . }}
-spec:
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: 80
-  selector:
-    app: {{ include "todo-app.name" . }}
-    release: {{ .Release.Name }}
-```
-
-**templates/ingress.yaml:**
-
-```yaml
-{{- if .Values.ingress.enabled -}}
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "todo-app.fullname" . }}
-  annotations:
-    {{- range $key, $value := .Values.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
-spec:
-  rules:
-    - host: {{ .Values.ingress.hosts[0].host }}
-      http:
-        paths:
-          - path: {{ .Values.ingress.hosts[0].paths[0] }}
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "todo-app.fullname" . }}
-                port:
-                  number: 80
-{{- end }}`
-```
-#### 4\. Configuring Blue-Green Deployment
-
-For blue-green deployment, you need to configure Helm values and templates to support blue and green environments. Adjust your `values.yaml` to include environment-specific settings and use Helm hooks or a custom template logic to manage switching between blue and green deployments.
-
-#### 5\. Running the Pipeline
-
-Apply the Tekton pipeline and tasks to your OpenShift cluster and trigger the pipeline.
-
-```sh
-oc apply -f pipeline.yaml
-oc apply -f unit-test-task.yaml
-oc apply -f static-code-analysis-task.yaml
-oc apply -f build-image-task.yaml
-oc apply -f promote-image-task.yaml
-oc apply -f deploy-task.yaml
-oc apply -f integration-test-task.yaml
-oc apply -f acceptance-test-task.yaml
-```
-Create a PipelineRun to trigger the pipeline:
-
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  name: todo-app-pipeline-run
-spec:
-  pipelineRef:
-    name: todo-app-pipeline
-  params:
-    - name: QUAY_USERNAME
-      value: "your-quay-username"
-    - name: QUAY_PASSWORD
-      value: "your-quay-password"
-    - name: COMMIT_SHA
-      value: "latest"
-```
-
-Apply the PipelineRun: `oc apply -f pipelinerun.yaml`
-
-This PipelineRun will start the CI/CD process, building the image, running tests, and deploying to each environment sequentially.
-
-### Conclusion
-
-This comprehensive guide covers the setup and configuration of a CI/CD pipeline for a ReactJS ToDo application using Tekton, Helm, and OpenShift. By following these steps, you can automate the entire process from code commit to deployment in dev, stage, and prod environments, ensuring quality through unit tests, static analysis, and integration tests, with the flexibility of blue-green deployments.
+## References
+- [Application source code and Pipeline Resources](https://github.com/pnminh/openshift-pipeline-helm)
+- [GitOps Deployment Repo](https://github.com/pnminh/app-gitops-configs)
+- [Helm source code repo](https://github.com/pnminh/helm-charts)
+- [Helm repo](https://pnminh.github.io/helm-repo/)

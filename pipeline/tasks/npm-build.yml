@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm-build
+  namespace: apps
+spec:
+  params:
+    - name: PATH_CONTEXT
+      description: The directory where the npm commands will be run
+      type: string
+  steps:
+    - name: npm-ci
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
+      script: |
+        #!/bin/sh
+        set -e
+        export CYPRESS_CACHE_FOLDER=/tmp/.cache
+        npm ci
+    - name: npm-test
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
+      script: |
+        #!/bin/sh
+        set -e
+        CI=true npm test
+    - name: npm-build
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
+      script: |
+        #!/bin/sh
+        set -e
+        CI=true npm run build
+  workspaces:
+    - name: source
+      description: "Workspace containing the build"

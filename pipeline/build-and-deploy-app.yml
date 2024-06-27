@@ -1,0 +1,174 @@
+
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-and-deploy-app
+  namespace: apps
+spec:
+  params:
+    - default: todo-ui
+      description: Application name
+      name: app
+      type: string
+    - description: Repo url
+      name: repo-url
+      type: string
+    - default: master
+      description: Repo revision
+      name: repo-revision
+      type: string
+  tasks:
+    - name: git-clone-source
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.repo-revision)
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: source
+    - name: retrieve-app-configs
+      params:
+        - name: app-config-file-path
+          value: apps/$(params.app)/app-config.yaml
+      runAfter:
+        - git-clone-source
+      taskRef:
+        kind: Task
+        name: app-configs
+      workspaces:
+        - name: source
+          workspace: source
+    - name: npm-build
+      params:
+        - name: PATH_CONTEXT  
+          value: apps/$(params.app)
+      runAfter:
+        - retrieve-app-configs
+      taskRef:
+        kind: Task
+        name: npm-build
+      when:
+        - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
+          operator: in
+          values:
+            - npm
+      workspaces:
+        - name: source
+          workspace: source
+    - name: maven-build
+      params:
+        - name: PATH_CONTEXT  
+          value: apps/$(params.app)
+      runAfter:
+        - retrieve-app-configs
+      taskRef:
+        kind: Task
+        name: maven-build
+      when:
+        - input: $(tasks.retrieve-app-configs.results.app-configs.build-type)
+          operator: in
+          values:
+            - mvn
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-and-push-image
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: SOURCE_DIR
+          value: $(tasks.retrieve-app-configs.results.app-configs.build-binary-dir)
+        - name: COMMIT_HASH
+          value: $(tasks.git-clone-source.results.commit)
+      taskRef: 
+        kind: Task
+        name: build-and-push-image
+      runAfter:
+        - npm-build
+        - maven-build
+      workspaces:
+        - name: source
+          workspace: source
+    - name: git-clone-deployment-repo
+      params:
+        - name: url
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: revision
+          value: tekton
+        - name: subdirectory
+          value: deployment-repo
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: source
+      runAfter:
+        - build-and-push-image
+    - name: update-dev-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: dev        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "true"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - git-clone-deployment-repo
+    # Todo: Run integration test
+    - name: update-stage-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: stage        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "true"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - update-dev-deployment
+    - name: update-prod-deployment
+      params:
+        - name: APP_NAME  
+          value: $(params.app)
+        - name: DEPLOYMENT_CONFIG_REPO_URL
+          value: $(tasks.retrieve-app-configs.results.app-configs.deploy-gitops-repo)
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: prod        
+        - name: IMAGE_TAG
+          value: $(tasks.build-and-push-image.results.image-tag)        
+        - name: AUTO_DEPLOYMENT
+          value: "false"
+      taskRef:
+        kind: Task
+        name: update-deployment-repo
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - update-stage-deployment
+  workspaces:
+    - name: source

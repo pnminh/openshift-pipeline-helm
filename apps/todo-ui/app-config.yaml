@@ -1,0 +1,3 @@
+build-type: npm
+build-binary-dir: build
+deploy-gitops-repo: https://github.wwt.com/phammi/app-gitops-configs.git

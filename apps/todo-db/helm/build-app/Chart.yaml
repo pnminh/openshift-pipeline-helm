@@ -1,0 +1,9 @@
+apiVersion: v2
+name: todo-db
+description: todo-db build helm chart
+type: application
+version: 0.1.0
+dependencies:
+  - name: build-app
+    version: ">=0.1.0"
+    repository: "https://pnminh.github.io/helm-repo"

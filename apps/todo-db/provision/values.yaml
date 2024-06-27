@@ -1,0 +1,23 @@
+# Values file for todo-db chart
+k8s-job:
+  image:
+    registry: quay.io/pnminh232
+    path: ubi9-build-tools-minimal
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.0.0"
+  imagePullSecrets: 
+    - name: quay
+  env:
+    - name: DATABASE_URL
+      value: jdbc:postgresql://todo-db:5432/todo-db
+    - name: DATABASE_USERNAME
+      value: admin
+    - name: DATABASE_PASSWORD
+      value: admin
+  command:
+    - /bin/bash
+    - -c
+    - |-
+      git clone https://github.wwt.com/phammi/todo-db.git /tmp/todo-db && \
+      cd /tmp/todo-db/migration && mvn liquibase:update -P external

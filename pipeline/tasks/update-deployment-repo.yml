@@ -1,0 +1,111 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-deployment-repo
+  namespace: apps
+spec:
+  params:
+    - name: APP_NAME
+      description: The app name, also the directory where the app is located
+      type: string    
+    - name: DEPLOYMENT_CONFIG_REPO_URL
+      type: string
+      description: Repository URL to deployment configurations 
+    - name: DEPLOYMENT_ENVIRONMENT
+      type: string
+      description: Environment where deployment takes place       
+    - name: IMAGE_TAG
+      type: string
+      description: New image tag for the deployment
+    - name: AUTO_DEPLOYMENT
+      type: string
+      description: Whether the deployment should take place automatically, through auto merge deployment config to main branch or not
+
+  steps: 
+    - name: update-deployment-image-tag
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/deployment-repo/apps/$(params.APP_NAME)/environments/$(params.DEPLOYMENT_ENVIRONMENT)
+      script: |
+        #!/bin/sh
+        yq e '.image.tag = "$(params.IMAGE_TAG)"' -i values.yaml
+
+    - name: create-branch-commit-push
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      workingDir: $(workspaces.source.path)/deployment-repo/apps/$(params.APP_NAME)/environments/$(params.DEPLOYMENT_ENVIRONMENT)
+      script: |
+        #!/bin/sh
+        export GIT_CONFIG_GLOBAL=/tmp/.gitconfig # ~/.gitconfig is not accessible
+        GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
+        BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
+        git config --global --add safe.directory  $(workspaces.source.path)/deployment-repo
+        git config --global user.name "$GIT_USER"
+        git config --global user.email "$GIT_USER@users.noreply.github.com"
+        git checkout -b $BRANCH_NAME
+        git add .
+        git commit -m "Update image tag to $(params.IMAGE_TAG)"
+        git push https://$GIT_USER:$GIT_TOKEN@${GIT_URL#https://} $BRANCH_NAME
+      env:
+        - name: GIT_USER
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_USER
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_TOKEN
+    - name: create-pr
+      image: 'quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0'
+      workingDir: $(workspaces.source.path)/deployment-repo/apps/$(params.APP_NAME)/environments/$(params.DEPLOYMENT_ENVIRONMENT)
+      script: |
+        #!/bin/sh
+        export GIT_CONFIG_GLOBAL=/tmp/.gitconfig
+        GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
+        REPO=$(echo $GIT_URL | sed 's/https:\/\/github.com\///' | sed 's/\.git//')
+        IMAGE_TAG=$(params.IMAGE_TAG)
+        SOURCE_BRANCH=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
+        TARGET_BRANCH=tekton
+        PR_RESPONSE=$(curl -s -X POST -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls -d '{"title":"Update image tag to $IMAGE_TAG","head":"'$SOURCE_BRANCH'","base":"'$TARGET_BRANCH'"}')
+        PR_URL=$(echo $PR_RESPONSE | jq -r '.html_url')
+        echo "PR created: $PR_URL"
+      env:
+        - name: GIT_USER
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_USER
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_TOKEN        
+
+    - name: auto-merge-pr
+      image: 'quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0'
+      workingDir: $(workspaces.source.path)/deployment-repo/apps/$(params.APP_NAME)/environments/$(params.DEPLOYMENT_ENVIRONMENT)
+      script: |
+        #!/bin/sh
+        if [ "$(params.AUTO_DEPLOYMENT)" = "true" ]; then
+          export GIT_CONFIG_GLOBAL=/tmp/.gitconfig
+          GIT_URL=$(params.DEPLOYMENT_CONFIG_REPO_URL)
+          REPO=$(echo $GIT_URL | sed 's/https:\/\/github.com\///' | sed 's/\.git//')
+          BRANCH_NAME=$(params.APP_NAME)-$(params.IMAGE_TAG)-$(params.DEPLOYMENT_ENVIRONMENT)
+          PR_NUMBER=$(curl -s -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls | jq -r '[.[] | select(.head.ref == "'$BRANCH_NAME'")] | .[0].number')
+          curl -s -X PUT -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/merge -d '{"merge_method":"merge"}'
+          echo "PR #$PR_NUMBER merged"
+        fi
+      env:
+        - name: GIT_USER
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_USER
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: git-creds
+              key: GIT_TOKEN
+  workspaces:
+    - name: source
+      description: "Workspace containing the build"

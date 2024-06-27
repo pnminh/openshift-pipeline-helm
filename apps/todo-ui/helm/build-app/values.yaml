@@ -1,0 +1,11 @@
+build-app:
+  source:
+    image:
+      repository: registry.access.redhat.com/ubi9/nginx-122
+      tag: "1-73"
+  strategy: s2i
+  target:
+    image:
+      registry: quay.io/pnminh232/registry-dev
+      path: todo-ui
+      tag: "1.0.0" #override during runtime

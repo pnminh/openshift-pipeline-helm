@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: app-configs
+  namespace: apps
+spec:
+  params:
+    - name: app-config-file-path
+      description: the path to app-config.yaml file
+  results:
+    - name: app-configs
+      description: "The app configs"
+      type: object
+      properties:
+        build-type: {}       
+        build-binary-dir: {}
+        deploy-gitops-repo: {}
+  steps:
+    - name: yaml-to-result-object
+      image: quay.io/pnminh232/ubi9-build-tools-minimal:1.0.0
+      imagePullPolicy: Always
+      script: |-
+        cat $(workspaces.source.path)/$(params.app-config-file-path) | \
+          yq -ojson -I0 > $(results.app-configs.path)
+  workspaces:
+    - name: source
+      description: "Workspace containing the yaml file"

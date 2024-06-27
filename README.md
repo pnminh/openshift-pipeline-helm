@@ -119,3 +119,9 @@ Upon successful completion of the pipeline run, your to-do list application will
 ## Conclusion:
 
 Tekton Pipelines empower you to automate the deployment process, freeing you from repetitive tasks and allowing you to focus on building amazing applications. With the knowledge you've gained, you can now leverage Tekton to streamline your deployments and embrace the magic of automation!
+
+## References
+- [Application source code and Pipeline Resources](https://github.com/pnminh/openshift-pipeline-helm)
+- [GitOps Deployment Repo](https://github.com/pnminh/app-gitops-configs)
+- [Helm source code repo](https://github.com/pnminh/helm-charts)
+- [Helm repo](https://pnminh.github.io/helm-repo/)
